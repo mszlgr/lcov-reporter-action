@@ -4,6 +4,7 @@ import { GitHub, context } from "@actions/github"
 
 import { parse } from "./lcov"
 import { diff } from "./comment"
+import { changedFiles } from "./files"
 
 async function main() {
 	const token = core.getInput("github-token")
@@ -16,10 +17,19 @@ async function main() {
 		return
 	}
 
-	const baseRaw = baseFile && await fs.readFile(baseFile, "utf-8").catch(err => null)
+	const baseRaw =
+		baseFile && (await fs.readFile(baseFile, "utf-8").catch(err => null))
 	if (baseFile && !baseRaw) {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`)
 	}
+
+	const github = new GitHub(token)
+	const files = await changedFiles(
+		github,
+		context.repo,
+		context.payload.commits,
+	)
+	console.log(JSON.stringify(files, null, 2))
 
 	const options = {
 		repository: context.payload.repository.full_name,
@@ -30,12 +40,11 @@ async function main() {
 	}
 
 	const lcov = await parse(raw)
-	const baselcov = baseRaw && await parse(baseRaw)
+	const baselcov = baseRaw && (await parse(baseRaw))
 	const body = diff(lcov, baselcov, options)
 
-	await new GitHub(token).issues.createComment({
-		repo: context.repo.repo,
-		owner: context.repo.owner,
+	await github.issues.createComment({
+		...context.repo,
 		issue_number: context.payload.pull_request.number,
 		body: diff(lcov, baselcov, options),
 	})
