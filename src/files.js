@@ -15,7 +15,7 @@ export async function changedFiles(github, repo, pr, count) {
 			return
 		}
 
-		for (const file of result.data) {
+		for (const file of response.data) {
 			if (file.status === "added" || file.status === "modified" || file.status === "renamed") {
 				files.push(file.filename)
 			}
