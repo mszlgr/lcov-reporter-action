@@ -23,13 +23,12 @@ async function main() {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`)
 	}
 
-	console.log(JSON.stringify(context.payload, null, 2))
-
 	const github = new GitHub(token)
 	const files = await changedFiles(
 		github,
 		context.repo,
-		context.payload.commits,
+		context.payload.pull_request.number,
+		context.payload.pull_request.changed_files,
 	)
 
 	console.log(JSON.stringify(files, null, 2))

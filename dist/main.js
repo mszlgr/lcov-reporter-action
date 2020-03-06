@@ -22916,31 +22916,37 @@ function diff(lcov, before, options) {
 	)
 }
 
-async function changedFiles(github, repo, commits) {
+const perPage = 100;
+
+async function changedFiles(github, repo, pr, count) {
 	const files = [];
 
-	await Promise.all(
-		commits.map(async function(commit) {
-			if (!commit.distinct) {
-				return
-			}
-
-			const result = await github.repos.getCommit({
-				...repo,
-				ref: commit.id,
-			});
-
-			if (!result || !result.data) {
-				return
-			}
-
-			for (const file of result.data.files) {
-				if (file.status === "added" || file.status === "modified") {
-					files.push(file.filename);
+	for (const page = 0; page * perPage < count; page++) {
+		await Promise.all(
+			commits.map(async function(commit) {
+				if (!commit.distinct) {
+					return
 				}
-			}
-		}),
-	);
+
+				const response = await github.pulls.listFiles({
+					...repo,
+					pull_number: pr,
+					page,
+					per_page: perPage,
+				});
+
+				if (!response || !response.data) {
+					return
+				}
+
+				for (const file of result.data) {
+					if (file.status === "added" || file.status === "modified") {
+						files.push(file.filename);
+					}
+				}
+			}),
+		);
+	}
 
 	return files
 }
@@ -22962,13 +22968,12 @@ async function main$1() {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
 
-	console.log(JSON.stringify(github_1.payload, null, 2));
-
 	const github = new github_2(token);
 	const files = await changedFiles(
 		github,
 		github_1.repo,
-		github_1.payload.commits,
+		github_1.payload.pull_request.number,
+		github_1.payload.pull_request.changed_files,
 	);
 
 	console.log(JSON.stringify(files, null, 2));
