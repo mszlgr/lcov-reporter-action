@@ -3,7 +3,7 @@ const perPage = 100
 export async function changedFiles(github, repo, pr, count) {
 	const files = []
 
-	for (const page = 0; page * perPage < count; page++) {
+	for (let page = 0; page * perPage < count; page++) {
 		const response = await github.pulls.listFiles({
 			...repo,
 			pull_number: pr,
