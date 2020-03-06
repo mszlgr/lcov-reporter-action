@@ -29,6 +29,8 @@ async function main() {
 		context.repo,
 		context.payload.commits,
 	)
+
+	console.log(JSON.stringify(context.payload, null, 2))
 	console.log(JSON.stringify(files, null, 2))
 
 	const options = {

@@ -22968,6 +22968,8 @@ async function main$1() {
 		github_1.repo,
 		github_1.payload.commits,
 	);
+
+	console.log(JSON.stringify(github_1.payload, null, 2));
 	console.log(JSON.stringify(files, null, 2));
 
 	const options = {
