@@ -22953,7 +22953,7 @@ async function main$1() {
 	await new github_2(token).issues.createComment({
 		repo: github_1.repo.repo,
 		owner: github_1.repo.owner,
-		issue_number: github_1.payload.pull_request.number,
+		issue_number: github_1.payload.pull_request ? github_1.payload.pull_request.number : 0,
 		body: diff(lcov, baselcov, options),
 	});
 }

@@ -36,7 +36,7 @@ async function main() {
 	await new GitHub(token).issues.createComment({
 		repo: context.repo.repo,
 		owner: context.repo.owner,
-		issue_number: context.payload.pull_request.number,
+		issue_number: context.payload.pull_request ? context.payload.pull_request.number : 0,
 		body: diff(lcov, baselcov, options),
 	})
 }
