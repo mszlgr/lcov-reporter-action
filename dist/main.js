@@ -22940,10 +22940,10 @@ async function main$1() {
 
 	const options = {
 		repository: github_1.payload.repository.full_name,
-		commit: github_1.payload.pull_request.head.sha,
+		commit: github_1.payload.pull_request ? github_1.payload.pull_request.head.sha : '',
 		prefix: `${process.env.GITHUB_WORKSPACE}/`,
-		head: github_1.payload.pull_request.head.ref,
-		base: github_1.payload.pull_request.base.ref,
+		head: github_1.payload.pull_request ? github_1.payload.pull_request.head.ref : '',
+		base: github_1.payload.pull_request ? github_1.payload.pull_request.base.ref : '',
 	};
 
 	const lcov = await parse$2(raw);

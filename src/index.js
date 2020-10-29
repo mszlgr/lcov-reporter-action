@@ -23,10 +23,10 @@ async function main() {
 
 	const options = {
 		repository: context.payload.repository.full_name,
-		commit: context.payload.pull_request.head.sha,
+		commit: context.payload.pull_request ? context.payload.pull_request.head.sha : '',
 		prefix: `${process.env.GITHUB_WORKSPACE}/`,
-		head: context.payload.pull_request.head.ref,
-		base: context.payload.pull_request.base.ref,
+		head: context.payload.pull_request ? context.payload.pull_request.head.ref : '',
+		base: context.payload.pull_request ? context.payload.pull_request.base.ref : '',
 	}
 
 	const lcov = await parse(raw)
