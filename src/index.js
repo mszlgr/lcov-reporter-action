@@ -21,12 +21,17 @@ async function main() {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`)
 	}
 
+	if (!context.payload.pull_request) {
+		console.log(`Not in pull request, exiting...`)
+		return
+	}
+
 	const options = {
 		repository: context.payload.repository.full_name,
-		commit: context.payload.pull_request ? context.payload.pull_request.head.sha : '',
+		commit: context.payload.pull_request.head.sha,
 		prefix: `${process.env.GITHUB_WORKSPACE}/`,
-		head: context.payload.pull_request ? context.payload.pull_request.head.ref : '',
-		base: context.payload.pull_request ? context.payload.pull_request.base.ref : '',
+		head: context.payload.pull_request.head.ref,
+		base: context.payload.pull_request.base.ref,
 	}
 
 	const lcov = await parse(raw)
@@ -36,7 +41,7 @@ async function main() {
 	await new GitHub(token).issues.createComment({
 		repo: context.repo.repo,
 		owner: context.repo.owner,
-		issue_number: context.payload.pull_request ? context.payload.pull_request.number : 0,
+		issue_number: context.payload.pull_request.number,
 		body: diff(lcov, baselcov, options),
 	})
 }

@@ -22938,12 +22938,17 @@ async function main$1() {
 		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
 
+	if (!github_1.payload.pull_request) {
+		console.log(`Not in pull request, exiting...`);
+		return
+	}
+
 	const options = {
 		repository: github_1.payload.repository.full_name,
-		commit: github_1.payload.pull_request ? github_1.payload.pull_request.head.sha : '',
+		commit: github_1.payload.pull_request.head.sha,
 		prefix: `${process.env.GITHUB_WORKSPACE}/`,
-		head: github_1.payload.pull_request ? github_1.payload.pull_request.head.ref : '',
-		base: github_1.payload.pull_request ? github_1.payload.pull_request.base.ref : '',
+		head: github_1.payload.pull_request.head.ref,
+		base: github_1.payload.pull_request.base.ref,
 	};
 
 	const lcov = await parse$2(raw);
@@ -22953,7 +22958,7 @@ async function main$1() {
 	await new github_2(token).issues.createComment({
 		repo: github_1.repo.repo,
 		owner: github_1.repo.owner,
-		issue_number: github_1.payload.pull_request ? github_1.payload.pull_request.number : 0,
+		issue_number: github_1.payload.pull_request.number,
 		body: diff(lcov, baselcov, options),
 	});
 }
