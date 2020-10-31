@@ -22803,7 +22803,6 @@ function tabulate(lcov, options) {
 		th("Branches"),
 		th("Funcs"),
 		th("Lines"),
-		th("Uncovered Lines"),
 	);
 
 	const folders = {};
@@ -22841,8 +22840,7 @@ function toRow(file, indent, options) {
 		td(filename(file, indent, options)),
 		td(percentage$1(file.branches)),
 		td(percentage$1(file.functions)),
-		td(percentage$1(file.lines)),
-		td(uncovered(file, options)),
+		td(percentage$1(file.lines))
 	)
 }
 
@@ -22868,55 +22866,10 @@ function percentage$1(item) {
 	return tag(`${rounded}%`)
 }
 
-function uncovered(file, options) {
-	const branches = (file.branches ? file.branches.details : [])
-		.filter(branch => branch.taken === 0)
-		.map(branch => branch.line);
-
-	const lines = (file.lines ? file.lines.details : [])
-		.filter(line => line.hit === 0)
-		.map(line => line.line);
-
-	const all = [...branches, ...lines].sort();
-
-	return all
-		.map(function(line) {
-			const relative = file.file.replace(options.prefix, "");
-			const href = `https://github.com/${options.repository}/blob/${options.commit}/${relative}#L${line}`;
-			return a({ href }, line)
-		})
-		.join(", ")
-}
-
 function comment (lcov, options) {
 	return fragment(
 		`Coverage after merging ${b(options.head)} into ${b(options.base)}`,
-		table(tbody(tr(th(percentage(lcov).toFixed(2), "%"))))
-	)
-}
-
-function diff(lcov, before, options) {
-	if (!before) {
-		return comment(lcov, options)
-	}
-
-	const pbefore = percentage(before);
-	const pafter = percentage(lcov);
-	const pdiff = pafter - pbefore;
-	const plus = pdiff > 0 ? "+" : "";
-	const arrow =
-		pdiff === 0
-			? ""
-			: pdiff < 0
-				? "▾"
-				: "▴";
-
-	return fragment(
-		`Coverage after merging ${b(options.head)} into ${b(options.base)}`,
-		table(tbody(tr(
-			th(pafter.toFixed(2), "%"),
-			th(arrow, " ", plus, pdiff.toFixed(2), "%"),
-		))),
+		table(tbody(tr(th(percentage(lcov).toFixed(2), "%")))),
 		"\n\n",
 		details(summary("Coverage Report"), tabulate(lcov, options)),
 	)
@@ -22925,17 +22878,11 @@ function diff(lcov, before, options) {
 async function main$1() {
 	const token = core$1.getInput("github-token");
 	const lcovFile = core$1.getInput("lcov-file") || "./coverage/lcov.info";
-	const baseFile = core$1.getInput("lcov-base");
 
 	const raw = await fs.promises.readFile(lcovFile, "utf-8").catch(err => null);
 	if (!raw) {
 		console.log(`No coverage report found at '${lcovFile}', exiting...`);
 		return
-	}
-
-	const baseRaw = baseFile && await fs.promises.readFile(baseFile, "utf-8").catch(err => null);
-	if (baseFile && !baseRaw) {
-		console.log(`No coverage report found at '${baseFile}', ignoring...`);
 	}
 
 	if (!github_1.payload.pull_request) {
@@ -22952,18 +22899,16 @@ async function main$1() {
 	};
 
 	const lcov = await parse$2(raw);
-	const baselcov = baseRaw && await parse$2(baseRaw);
-	const body = diff(lcov, baselcov, options);
 
 	await new github_2(token).issues.createComment({
 		repo: github_1.repo.repo,
 		owner: github_1.repo.owner,
 		issue_number: github_1.payload.pull_request.number,
-		body: diff(lcov, baselcov, options),
+		body: comment(lcov, options),
 	});
 }
 
 main$1().catch(function(err) {
 	console.log(err);
-	core$1.setFailed(err.message);
+	core$1.setFailed(comment.message);
 });

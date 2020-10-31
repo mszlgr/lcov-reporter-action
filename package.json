@@ -1,6 +1,6 @@
 {
 	"name": "lcov-reporter-action",
-	"version": "0.2.22",
+	"version": "0.2.23",
 	"description": "Comments a pull request with the lcov code coverage",
 	"license": "MIT",
 	"author": "Romeo Van Snick",
